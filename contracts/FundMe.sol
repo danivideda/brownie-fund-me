@@ -59,7 +59,7 @@ contract FundMe {
         _;
     }
 
-    function withdraw() public payable onlyOwner {
+    function withdraw() public onlyOwner {
         payable(msg.sender).transfer(address(this).balance);
         for (
             uint256 funderIndex = 0;
