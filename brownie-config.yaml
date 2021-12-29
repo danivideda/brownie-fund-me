@@ -1,3 +1,7 @@
+dotenv: .env
+wallets:
+  private_key: ${PRIVATE_KEY}
+
 dependecies:
   - smartcontractkit/chainlink-brownie-contracts@0.3.0
 
