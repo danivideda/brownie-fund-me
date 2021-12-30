@@ -20,6 +20,7 @@ def deploy_fund_me():
     )
 
     print(f"Contract deployed: {fund_me}")
+    return fund_me
 
 
 def main():
