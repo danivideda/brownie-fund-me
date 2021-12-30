@@ -1,57 +1,59 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.11;
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+
+pragma solidity ^0.6.6;
+
+import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
+import "@chainlink/contracts/src/v0.6/vendor/SafeMathChainlink.sol";
 
 contract FundMe {
-    mapping(address => uint256) public addressToAmountFunded;
-    mapping(address => bool) public addressExist;
-    address[] funders;
-    address public owner;
+    using SafeMathChainlink for uint256;
 
-    constructor() {
+    mapping(address => uint256) public addressToAmountFunded;
+    address[] public funders;
+    address public owner;
+    AggregatorV3Interface public priceFeed;
+
+    constructor(address _priceFeed) public {
+        priceFeed = AggregatorV3Interface(_priceFeed);
         owner = msg.sender;
     }
 
     function fund() public payable {
-        // Pay minimum $50
-        uint256 minimumUsd = 50 * 10**18;
+        uint256 mimimumUSD = 50 * 10**18;
         require(
-            getConversionRate(msg.value) >= minimumUsd,
-            "Need to spend more ETH!"
+            getConversionRate(msg.value) >= mimimumUSD,
+            "You need to spend more ETH!"
         );
-
         addressToAmountFunded[msg.sender] += msg.value;
-        if (!addressExist[msg.sender]) {
-            addressExist[msg.sender] = true;
-            funders.push(msg.sender);
-        }
+        funders.push(msg.sender);
     }
 
     function getVersion() public view returns (uint256) {
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(
-            0x8A753747A1Fa494EC906cE90E9f37563A8AF630e
-        );
         return priceFeed.version();
     }
 
-    // 1000000000 WEI = 1 GWEI
+    function getPrice() public view returns (uint256) {
+        (, int256 answer, , , ) = priceFeed.latestRoundData();
+        return uint256(answer * 10**10);
+    }
+
+    // 1000000000
     function getConversionRate(uint256 ethAmount)
         public
         view
         returns (uint256)
     {
         uint256 ethPrice = getPrice();
-        uint256 ethAmountInUsd = (ethPrice * ethAmount) / 1000000000000000000;
-        // 0.000004039010000000
+        uint256 ethAmountInUsd = (ethPrice * ethAmount) / 10**18;
         return ethAmountInUsd;
     }
 
-    function getPrice() public view returns (uint256) {
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(
-            0x8A753747A1Fa494EC906cE90E9f37563A8AF630e
-        );
-        (, int256 answer, , , ) = priceFeed.latestRoundData();
-        return uint256(answer * 10000000000);
+    function getEntranceFee() public view returns (uint256) {
+        // mimimumUSD
+        uint256 mimimumUSD = 50 * 10**18;
+        uint256 price = getPrice();
+        uint256 precision = 1 * 10**18;
+        return (mimimumUSD * precision) / price;
     }
 
     modifier onlyOwner() {
@@ -59,15 +61,16 @@ contract FundMe {
         _;
     }
 
-    function withdraw() public onlyOwner {
-        payable(msg.sender).transfer(address(this).balance);
+    function withdraw() public payable onlyOwner {
+        msg.sender.transfer(address(this).balance);
+
         for (
             uint256 funderIndex = 0;
             funderIndex < funders.length;
             funderIndex++
         ) {
-            addressToAmountFunded[funders[funderIndex]] = 0;
-            addressExist[funders[funderIndex]] = false;
+            address funder = funders[funderIndex];
+            addressToAmountFunded[funder] = 0;
         }
         funders = new address[](0);
     }

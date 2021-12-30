@@ -1,9 +1,14 @@
-from brownie import accounts, network, config
+from brownie import MockV3Aggregator, accounts, network, config
+from web3 import Web3
 
+LOCAL_BLOCKCHAIN_ENVIRONTMENTS = ["development", "ganache-local"]
 PRIVATE_KEY = config["wallets"]["private_key"]
+DECIMALS = 18
+STARTING_PRICE = 2000
+
 
 def get_account():
-    if network.show_active() == "development":
+    if network.show_active() in LOCAL_BLOCKCHAIN_ENVIRONTMENTS:
         account = accounts[0]
 
         print("My Account: \n", account)
@@ -16,5 +21,15 @@ def get_account():
     else:
         account = accounts.add(PRIVATE_KEY)
         print("My Account: \n", account)
-    
+
     return account
+
+
+def deploy_mocks(account):
+    print(f"the active network is: {network.show_active()}")
+    print("deploying mocks...")
+    if len(MockV3Aggregator) <= 0:
+        MockV3Aggregator.deploy(
+            DECIMALS, Web3.toWei(STARTING_PRICE, "ether"), {"from": account}
+        )
+    print("Mocks deployed")
