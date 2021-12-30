@@ -1,6 +1,7 @@
 from brownie import MockV3Aggregator, accounts, network, config
 from web3 import Web3
 
+FORKED_LOCAL_ENVIRONMENTS = ["mainnet-fork"]
 LOCAL_BLOCKCHAIN_ENVIRONTMENTS = ["development", "ganache-local"]
 PRIVATE_KEY = config["wallets"]["private_key"]
 DECIMALS = 8
@@ -8,7 +9,10 @@ STARTING_PRICE = 2000 * 10 ** 8
 
 
 def get_account():
-    if network.show_active() in LOCAL_BLOCKCHAIN_ENVIRONTMENTS:
+    if (
+        network.show_active() in LOCAL_BLOCKCHAIN_ENVIRONTMENTS
+        or network.show_active() in FORKED_LOCAL_ENVIRONMENTS
+    ):
         account = accounts[0]
 
         print("My Account: \n", account)

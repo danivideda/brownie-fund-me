@@ -7,7 +7,7 @@ import pytest
 def test_can_fund_withdraw():
     account = get_account()
     fund_me = deploy_fund_me()
-    entrace_fee = fund_me.getEntranceFee()
+    entrace_fee = fund_me.getEntranceFee() + 100
     tx = fund_me.fund({"from": account, "value": entrace_fee})
     tx.wait(1)
     assert fund_me.addressToAmountFunded(account.address) == entrace_fee
