@@ -49,11 +49,11 @@ contract FundMe {
     }
 
     function getEntranceFee() public view returns (uint256) {
-        // mimimumUSD
-        uint256 mimimumUSD = 50 * 10**18;
+        // minimumUSD
+        uint256 minimumUSD = 50 * 10**18;
         uint256 price = getPrice();
         uint256 precision = 1 * 10**18;
-        return (mimimumUSD * precision) / price;
+        return (minimumUSD * precision) / price;
     }
 
     modifier onlyOwner() {
